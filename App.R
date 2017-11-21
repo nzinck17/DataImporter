@@ -20,17 +20,21 @@
  
  ### Load packages
  
- library(shiny)
- library(shinyjs)
- library(shinythemes)
- library(readxl)
- library(tidyverse)
+ ipak <- function(pkg){
+   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+   if (length(new.pkg))
+     install.packages(new.pkg, dependencies = TRUE, repos="http://cran.rstudio.com/")
+   sapply(pkg, require, character.only = TRUE)
+ }
+ packages <- c("shinyjs", "shinythemes", "readxl", "tidyverse")
+ ipak(packages)
+
  
  # WD should be location of App.R... if not set it below
- setwd("//env-fp-wby-301.env.govt.state.ma.us/home$/DCrocker/DOCUMENTS/R/Data_Importer")
+setwd("//env-fp-wby-301.env.govt.state.ma.us/home$/DCrocker/DOCUMENTS/R/Data_Importer")
  
  ### Load table of datasets
-datasets <-  read_excel(paste0(getwd(),"/Data/datasets.xlsx"), sheet = 1, col_names = T, trim_ws = T) %>%
+datasets <-  read_excel("C:/WQDatabase/DataImporter/datasets.xlsx", sheet = 1, col_names = T, trim_ws = T) %>%
   filter(ImportMethod == "Importer-R")
 
 ###################################################################################

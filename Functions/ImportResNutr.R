@@ -165,10 +165,8 @@ df.wq <- df.wq %>% slice(which(!grepl("X", df.wq$Status, fixed = TRUE))) # Filte
 # Fix the Location names
 df.wq$Location %<>%
   gsub("WACHUSET-","", .) %>% 
-  gsub("BMP1","FPRN", .) %>% 
-  gsub("BMP2","FHLN", .) %>% 
-  gsub("QUABBINT-","", .) %>% 
-  gsub("QUABBIN-","", .)
+  gsub("FIELD-QC-","", .)
+
 
 ######################
 #   Add new Columns  #
@@ -360,7 +358,7 @@ return(dfs)
 # Write data to Database #
 ##########################
 
-IMPORT_DATA <- function(df.wq, path, file, filename.db, processedfolder, df.flags = NULL){
+IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, processedfolder){
 
   con <-  odbcConnectAccess(filename.db)
   
