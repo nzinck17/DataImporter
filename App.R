@@ -51,7 +51,7 @@ fluidRow(
   column(5,
          wellPanel(
            selectInput("datatype", "1. Select data type:", 
-                       choices = datasets$DataSet),
+                       choices = datasets$DataType),
            br()
          )
   ),
@@ -111,7 +111,7 @@ server <- function(input, output, session) {
   
   ds <- reactive({
     req(input$datatype)
-    filter(datasets, DataSet == input$datatype)
+    filter(datasets, DataType == input$datatype)
   })
 scriptname <- reactive({ 
     req(input$datatype)
