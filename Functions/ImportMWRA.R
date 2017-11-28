@@ -443,7 +443,6 @@ if (nrow(query.prelim) > 0) {# If true there is at least one record in the time 
   processed_subdir <- paste0("/", max(year(df.wq$SampleDateTime))) # Raw data archived by year, subfolders = Year
   processed_dir <- paste0(processedfolder, processed_subdir)
   file.rename(path, paste0(processed_dir,"/", file))
-
 }
 ### END 
 
