@@ -1,39 +1,38 @@
 ##############################################################################################################################
-#     Title: StageToDischarge
+#     Title: ImportHOBOTribs.R
 #     Description: This script will process raw HOBO data files containing stage and
 #     temperature data by calculating discharge using rating coefficients from the Wachusett Hydro Database (tblRatings).
-#     Output:
-#     Written by: Dan Crocker, July 2017
+#     Output: df.wq - Daily flow/water temp records imported to WQDB
+#     Written by: Dan Crocker, July 2017, revised November 2017
 ##############################################################################################################################
 
 # LOAD REQUIRED LIBRARIES
-library(RODBC)
-library(odbc)
-library(DBI)
-library(tidyverse)
-library(data.table)
-library(lubridate)
-library(DescTools)
-library(scales)
-library(extrafont)
-library(readxl) # new to swap code that gets the data to read_excel()
+# library(RODBC)
+# library(odbc)
+# library(DBI)
+# library(tidyverse)
+# library(data.table)
+# library(lubridate)
+# library(DescTools)
+# library(scales)
+# library(readxl) # new to swap code that gets the data to read_excel()
 
 #################
 # INITIAL SETUP #
 #################
 
 ### Function Arguments:
-
+# 
 # rawdatafolder <- "W:/WatershedJAH/EQStaff/WQDatabase/TribStages_HOBOs"
 # processedfolder <- "W:/WatershedJAH/EQStaff/WQDatabase/TribStages_HOBOs/Processed_HOBO_data"
 # filename.db <- "C:/WQDatabase/WaterQualityDB_fe.mdb"
-#   
+# 
 # # Make a list of all the files in the folder
 #   files <- grep(
 #     x = list.files(rawdatafolder, ignore.case = T, include.dirs = F),
 #     pattern = "^(?=.*\\b(xlsx|xlsm)\\b)(?!.*\\$\\b)", # regex to show xlsx files, but filter out lockfiles string = "$"
 #     value = T,
-#     perl =T) 
+#     perl =T)
 #   files
 #   # Select the file to calculate discharge
 #   file <- files[1]
@@ -94,12 +93,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL){
   df.wq$ratingNo <- sapply(x, function(x) ratings2$ID[ratings2$Start <= x & ratings2$End >= x])
   df.wq$ratingNo <-  as.numeric(df.wq$ratingNo)
 
-  ### Old Method - sapply much faster
-  # for (i in seq_along()) {
-  #   df.wq$ratingNo[i] <- ratings2$ID[ratings2$Start <= df.wq$Date[i] & ratings2$End >= df.wq$Date[i]]
-  # }
 
-  #################################################################
+#################################################################
 # Assign the rating part to each stage
 x <- df.wq$ratingNo
 y <- df.wq$Stage_ft
@@ -122,39 +117,6 @@ if(ratings2$Parts[ratings2$ID == x] == 1) {# Rating has 1 part
 }
 
 df.wq$part <- mapply(part,x,y) %>% as.numeric()
-#df.wq$part <- as.numeric(df.wq$part)
-
-#######################################################################
-
-### Assign the rating part to each stage - OLD WAY - SUPERCEDED BY ABOVE
-  # for (i in seq_along(df.wq$ratingNo)) {
-  #   if(ratings2$Parts[ratings2$ID == df.wq$ratingNo[i]] == 1) { # It is a 1 part Rating
-  #       df.wq$part <- 1 # The rating has 1 part - assign part 1
-  #     } else { # rating has 2 or 3 parts - so there is at least a #Breakpoint 1
-  #       parts <- ifelse(is.na(ratings2$Break2[ratings2$ID == df.wq$ratingNo[i]]), 2, 3)
-  #       if(parts == 2) { # This is a 2 part rating
-  #       # If the stage is less than Breakpoint 1 then use the first part of rating
-  #         if(df.wq$Stage_ft[i] < ratings2$Break1[ratings2$ID == df.wq$ratingNo[i]]) {
-  #           df.wq$part[i] <- 1 # The stage is in the first part of the rating - assign part 1
-  #         } else {
-  #           df.wq$part[i] <- 2 # The stage is above the first breakpoint - assign part 2
-  #         }
-  #         next
-  #       }
-  #     }
-  #         if(parts == 3) { # This is a 3 part rating
-  #             if(df.wq$Stage_ft[i] < ratings2$Break1[ratings2$ID == df.wq$ratingNo[i]]) {
-  #               df.wq$part[i] <- 1 # The stage is in the first part of the rating - assign part 1
-  #               } else {
-  #                 if(df.wq$Stage_ft[i] >= ratings2$Break2[ratings2$ID == df.wq$ratingNo[i]]) {
-  #                 df.wq$part[i] <- 3 # Stage is above Break2 - assign part 3
-  #                 } else {
-  #                   df.wq$part[i] <- 2 # Rating must be in part 2 since it is not in part 1 or part 3
-  #                 }
-  #                 next
-  #               }
-  #         }
-  #   }
 
 # LOOP THROUGH ALL STAGE VALUES AND CALCULATE THE DISCHARGE USING RATING COEFFICIENTS
 
@@ -192,10 +154,6 @@ df.wq$part <- mapply(part,x,y) %>% as.numeric()
       df.wq$q_cfs[i] <- findq(stage = df.wq$Stage_ft[i], C = get(C), a = get(a), n = get(n))
   }
 
-################### MAKE COPY OF DATA TO USE GOING FORWARD
-#  df.wq <- sd1
-###################
-
 # Create new dataframe that calculates daily min, mean, max
   df.wq <- df.wq %>%
     group_by(date(df.wq$DateTime)) %>%
@@ -223,9 +181,9 @@ df.wq$part <- mapply(part,x,y) %>% as.numeric()
   names(df.wq) <- toupper(names(df.wq))
   df.wq <-  df.wq[, c(12,11, 1:10)]
   df.wq <- as.data.frame(df.wq)
-
- } # END HOBO_PROCESS - STOP HERE AND INSPECT DATA BEFORE IMPORTING TO WQ DATABASE
-#df.wq <- HOBO_PROCESS(file, rawdatafolder, filename.db) # Run the function to process the stage/water temp data
+  return(df.wq)
+ } # PROCESS_DATA - STOP HERE AND INSPECT DATA BEFORE IMPORTING TO WQ DATABASE
+#df.wq <- PROCESS_DATA(file, rawdatafolder, filename.db) # Run the function to process the stage/water temp data
 
 #
 # INSPECT DATA TO MAKE SURE IT LOOKS GOOD BEFORE IMPORTING TO WQDB
@@ -249,49 +207,3 @@ df.wq$part <- mapply(part,x,y) %>% as.numeric()
   odbcCloseAll()
   rm(con)
  }
- #summary(df.wq)
-
-###########################
-#         PLOTTING        #
-###########################
-# con <-  odbcConnectAccess("C:/WQDatabase/WaterQualityDB_fe.mdb")
-# loc <- "MD01"
-# hobo <- sqlFetch(con, "tblHOBO_DATA")
-# summary(hobo)
-# pd <- filter(hobo, TRIBUTARY == loc)
-# # # Reshape data for plotting
-# # pd1 <- pd %>%
-# #   dplyr::select(c(3,5,8)) %>%
-# #   gather(key = msmt, value, 2:3)
-# 
-# title <- paste0("Stage and Calculated Discharges from HOBOs\n At Tributary ", loc)
-# y1lim <- max(pd$Q_MEAN_CFS)
-# y2lim <- max(pd$STAGE_MEAN)
-# mult <- y1lim / y2lim
-# 
-#   plot  <- ggplot(pd, aes(x = DATE)) +
-#     geom_line(aes(y = pd$STAGE_MEAN * mult, color = "Daily Mean Stage (ft)"), size = 0.5)  +
-#     geom_line(aes(y = pd$Q_MEAN_CFS, color = "Daily Mean Discharge (cfs)"), size = 0.5) +
-#     geom_point(aes(y = pd$STAGE_MEAN * mult, color = "Daily Mean Stage (ft)"), size = 1)  +
-#     geom_point(aes(y = pd$Q_MEAN_CFS, color = "Daily Mean Discharge (cfs)"), size = 1) +
-#     scale_y_continuous(breaks = pretty_breaks(),limits = c(0,y1lim),
-#                        sec.axis = sec_axis(~./mult, breaks = pretty_breaks(), name = "Stage (ft)")) +
-#     scale_colour_manual(values = c("blue", "firebrick4")) +
-#     labs(y = "Discharge (Cubic Feet per Second)",
-#          x = "Date",
-#          colour = "") +
-#     ggtitle(title) +
-#     theme(plot.title = element_text(family = "Arial",color= "black", face="bold", size=14, vjust = 1, hjust = 0.5),
-#         legend.position = c(0.2, 0.6),
-#         axis.title.x = element_text(angle = 0, face = "bold", color = "black"),
-#         axis.title.y = element_text(angle = 90, face = "bold", color = "black"))
-# 
-# plot
-# 
-# # Export the plot - This can eventually be turned into a function and tied to an action button in Shiny
-# path <- paste0(folder,"/Plots")
-# now <- format(Sys.time(), "%Y%m%d")
-# path <- paste0(path, "/StageDischarge_", "at_", loc, "-", now, ".png")
-# png(filename=path, units="in", width=9.5, height=7, res=300)
-# print(plot)
-# dev.off()

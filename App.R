@@ -16,8 +16,6 @@
 # Load Libraries and Script (Sources, Modules, and Functions)
 #####################################################################################################
  
- #setwd("//env-fp-wby-301.env.govt.state.ma.us/home$/DCrocker/DOCUMENTS/R/MWRA_Data_Importer")
- 
  ### Load packages
  
  ipak <- function(pkg){
@@ -26,12 +24,13 @@
      install.packages(new.pkg, dependencies = TRUE, repos="http://cran.rstudio.com/")
    sapply(pkg, require, character.only = TRUE)
  }
- packages <- c("shinyjs", "shinythemes", "readxl", "tidyverse")
+ packages <- c("shinyjs", "shinythemes", "readxl", "tidyverse", "RODBC", "odbc", "DBI", "lubridate",
+               "DescTools", "scales", "data.table", "magrittr", "stringr")
  ipak(packages)
 
  
  # WD should be location of App.R... if not set it below
-setwd("//env-fp-wby-301.env.govt.state.ma.us/home$/DCrocker/DOCUMENTS/R/Data_Importer")
+#setwd("//env-fp-wby-301.env.govt.state.ma.us/home$/DCrocker/DOCUMENTS/R/Data_Importer")
  
  ### Load table of datasets
 datasets <-  read_excel("C:/WQDatabase/DataImporter/datasets.xlsx", sheet = 1, col_names = T, trim_ws = T) %>%
@@ -92,7 +91,6 @@ fluidRow(
          )
   )
 )
-
 
 #######################################################
 

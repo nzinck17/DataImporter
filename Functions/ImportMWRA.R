@@ -10,17 +10,16 @@
 #     - Additional variables may need to be generated to interact with shiny App
 ##############################################################################################################################
 
-# Load libraries needed
-
-library(stringr)
-library(odbc)
-library(RODBC)
-library(DBI)
-library(lubridate)
-library(magrittr)
-# Tidyverse and readxl are loaded in App.r
 # NOTE - THIS TOP SECTION IS FOR TESTING THE FUNCTION OUTSIDE SHINY
 # COMMENT OUT SECTION BELOW WHEN RUNNING FUNCTION IN SHINY
+
+# Load libraries needed
+    # library(stringr)
+    # library(odbc)
+    # library(RODBC)
+    # library(DBI)
+    # library(lubridate)
+    # library(magrittr)
 
 ######################################################################################################################    
 # READ NEW RAW DATA FILE ############################################################################################# 
