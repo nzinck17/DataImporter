@@ -22,7 +22,7 @@
 #################
 
 ### Function Arguments:
-# 
+
 # rawdatafolder <- "W:/WatershedJAH/EQStaff/WQDatabase/TribStages_HOBOs"
 # processedfolder <- "W:/WatershedJAH/EQStaff/WQDatabase/TribStages_HOBOs/Processed_HOBO_data"
 # filename.db <- "C:/WQDatabase/WaterQualityDB_fe.mdb"
@@ -181,8 +181,16 @@ df.wq$part <- mapply(part,x,y) %>% as.numeric()
   names(df.wq) <- toupper(names(df.wq))
   df.wq <-  df.wq[, c(12,11, 1:10)]
   df.wq <- as.data.frame(df.wq)
-  return(df.wq)
+  
+  # Create a list of the processed datasets
+  dfs <- list()
+  dfs[[1]] <- df.wq
+  dfs[[2]] <- path
+  dfs[[3]] <- NA  
+  
+  return(dfs)
  } # PROCESS_DATA - STOP HERE AND INSPECT DATA BEFORE IMPORTING TO WQ DATABASE
+
 #df.wq <- PROCESS_DATA(file, rawdatafolder, filename.db) # Run the function to process the stage/water temp data
 
 #
