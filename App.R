@@ -47,22 +47,18 @@ fluidRow(br(), br(), br(), br(), h2("Import Data To Databases", align = "center"
 
 fluidRow(
   useShinyjs(),
-  column(5,
+  column(6,
          wellPanel(
            selectInput("datatype", "1. Select data type:", 
                        choices = datasets$DataType),
            br()
          )
   ),
-  column(5,
+  column(6,
          wellPanel(
            uiOutput("file.UI")
-         )
-  ),
-  column(5,
-         wellPanel(
-           uiOutput("probe.UI")
-         )
+         ),
+         uiOutput("probe.UI")
   )
 ),
 fluidRow(
@@ -108,35 +104,34 @@ server <- function(input, output, session) {
   # Specify the raw data folder based on data type: (Add paths for other data types as necessary)
   
   ds <- reactive({
-    req(input$datatype)
     filter(datasets, DataType == input$datatype)
   })
-scriptname <- reactive({ 
-    req(input$datatype)
+  
+  scriptname <- reactive({
     paste0(getwd(), "/Functions/", ds()$ScriptProcessImport[1])
   })
   
- rawdatafolder <- reactive({
-      req(input$datatype)
-      ds()$RawFilePath[1]
+  rawdatafolder <- reactive({
+    ds()$RawFilePath[1]
   })
-   processedfolder <- reactive({
-        req(input$datatype)
-     ds()$ProcessedFilePath[1]
-   })  
+  
+  processedfolder <- reactive({
+    ds()$ProcessedFilePath[1]
+  })
+  
   filename.db <- reactive({
-       req(input$datatype)
     ds()$DBPath[1]
   })
+  
   
   ### FILE SELECTION
   
   # Make the File List
-  files <- reactive({grep(
-    x = list.files(rawdatafolder(), ignore.case = T, include.dirs = F),
-    pattern = "^(?=.*\\bxlsx\\b)(?!.*\\$\\b)", # regex to show xlsx files, but filter out lockfiles string = "$"
-    value = T,
-    perl =T)
+  files <- eventReactive(c(rawdatafolder(), import.delay()) ,{
+    grep(x = list.files(rawdatafolder(), ignore.case = T, include.dirs = F),
+         pattern = "^(?=.*\\bxlsx\\b)(?!.*\\$\\b)", # regex to show xlsx files, but filter out lockfiles string = "$"
+         value = T,
+         perl =T)
   })
   
   # Select Input where user finds and sets the file to import (# this could be set up to do multiple files at a time, but its safer to just do one at a time)
@@ -146,6 +141,7 @@ scriptname <- reactive({
                 label = "2. Choose file to upload:", 
                 choices = files())
   })
+  
   # Update Select Input when a file is imported (actually when the import button is pressed (succesful or not))
   observeEvent(input$import, {
     updateSelectInput(session = session, 
@@ -154,7 +150,8 @@ scriptname <- reactive({
                       choices = files(),
                       selected = input$file)
   })
- # if (input$file == "Profiles") {
+ 
+  # Show Probe Option when Profile Data Selected
   output$probe.UI <- renderUI({
     req(input$datatype == "Profiles")
     selectInput(inputId = "probe", 
@@ -165,7 +162,7 @@ scriptname <- reactive({
                             "Hydrolab MS5"),
                 selected = "YSI_EXO2")
   })
- # }                          
+                       
                             
   ### Process DATA
   
@@ -211,8 +208,8 @@ scriptname <- reactive({
   # Use of req() later will limit these to only show when process did not create an error)
   observeEvent(input$process, {
     show('import')
-    show('table.process.wq')
-    show('table.process.flag')
+    #show('table.process.wq')
+    #show('table.process.flag')
   })
   
   ### Import Data
@@ -239,8 +236,15 @@ scriptname <- reactive({
   # Hide import button and tables when import button is pressed (So one cannot double import same file)
   observeEvent(input$import, {
     hide('import')
-    hide('table.process.wq')
-    hide('table.process.flag')
+    #hide('table.process.wq')
+    #hide('table.process.flag')
+  })
+  
+  # Create a delayed reactive to trigger input file change update after import
+  import.delay <- reactive({
+    # Delay reactive invalidation (in milliseconds)
+    invalidateLater(10000, session)
+    input$import
   })
   
   # Add text everytime succesful import
